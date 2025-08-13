@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Rich Text → BBCode</title>
+<style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f8f9fa; }
+    #editor { width: 100%; height: 150px; border: 1px solid #ccc; padding: 8px; margin-bottom: 10px; overflow: auto; }
+    textarea { width: 100%; height: 150px; font-size: 16px; padding: 8px; }
+    button { margin-right: 10px; padding: 8px 16px; cursor: pointer; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<h2>Rich Text → BBCode → Xóa dấu</h2>
+
+<div id="editor" contenteditable="true" placeholder="Paste văn bản từ Word/Docs vào đây..."></div><br>
+
+<button onclick="convertRichTextToBBCode()">BBCode (Xóa dấu)</button>
+<button onclick="convertRichTextToBBCodeKeepDiacritics()">BBCode (Giữ dấu)</button>
+<!-- <button onclick="removeDiacriticsOnly()">Chỉ Xóa dấu</button> -->
+<button onclick="resetText()">Reset</button>
+
+<h3>Kết quả:</h3>
+<textarea id="outputText" readonly></textarea>
+
+<script>
+function removeVietnameseDiacritics(text) {
+    return text
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D");
+}
+
+function convertRichTextToBBCode() {
+    let editor = document.getElementById("editor");
+    let html = editor.innerHTML;
+    console.log("Original HTML:", html);
+
+    let bb = html
+        .replace(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/gi, "[b]$1[/b]\n\n")
+        .replace(/<b>(.*?)<\/b>/gi, "[b]$1[/b]")
+        .replace(/<strong>(.*?)<\/strong>/gi, "[b]$1[/b]")
+        .replace(/<i>(.*?)<\/i>/gi, "[i]$1[/i]")
+        .replace(/<em>(.*?)<\/em>/gi, "[i]$1[/i]")
+        .replace(/<u>(.*?)<\/u>/gi, "[u]$1[/u]")
+        .replace(/<a\s+href="(.*?)"[^>]*>(.*?)<\/a>/gi, "[url=$1]$2[/url]")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<\/p>/gi, "\n\n")
+        .replace(/<p[^>]*>/gi, "")
+        .replace(/<\/div>/gi, "\n")
+        .replace(/<div[^>]*>/gi, "")
+        .replace(/<\/span><\/span>/gi, "\n\n")
+        .replace(/<\/span>/gi, "");
+
+    console.log("After HTML to BBCode:", bb);
+
+    bb = bb.replace(/<\/?[^>]+(>|$)/g, "");
+    console.log("After removing HTML tags:", bb);
+    
+    bb = bb.replace(/[ \t]+/g, " ")  // Chỉ thay nhiều space/tab thành 1 space, không touch xuống dòng
+           .replace(/[ \t]*\n[ \t]*/g, "\n")  // Loại bỏ space/tab xung quanh xuống dòng
+           .replace(/\n{3,}/g, "\n\n");  // Giới hạn tối đa 2 xuống dòng liên tiếp
+    
+    console.log("After cleaning:", bb);
+
+    let result = "";
+    let i = 0;
+    while (i < bb.length) {
+        if (bb[i] === '[') {
+            // Tìm tag BBCode và giữ nguyên
+            let tagEnd = bb.indexOf(']', i);
+            if (tagEnd !== -1) {
+                result += bb.substring(i, tagEnd + 1);
+                i = tagEnd + 1;
+            } else {
+                result += removeVietnameseDiacritics(bb[i]);
+                i++;
+            }
+        } else {
+            result += removeVietnameseDiacritics(bb[i]);
+            i++;
+        }
+    }
+
+    document.getElementById("outputText").value = result.trim();
+}
+
+function convertRichTextToBBCodeKeepDiacritics() {
+    let editor = document.getElementById("editor");
+    let html = editor.innerHTML;
+    console.log("Original HTML:", html);
+
+    let bb = html
+        .replace(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/gi, "[b]$1[/b]\n\n")
+        .replace(/<b>(.*?)<\/b>/gi, "[b]$1[/b]")
+        .replace(/<strong>(.*?)<\/strong>/gi, "[b]$1[/b]")
+        .replace(/<i>(.*?)<\/i>/gi, "[i]$1[/i]")
+        .replace(/<em>(.*?)<\/em>/gi, "[i]$1[/i]")
+        .replace(/<u>(.*?)<\/u>/gi, "[u]$1[/u]")
+        .replace(/<a\s+href="(.*?)"[^>]*>(.*?)<\/a>/gi, "[url=$1]$2[/url]")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<\/p>/gi, "\n\n")
+        .replace(/<p[^>]*>/gi, "")
+        .replace(/<\/div>/gi, "\n")
+        .replace(/<div[^>]*>/gi, "")
+        .replace(/<\/span><\/span>/gi, "\n\n")
+        .replace(/<\/span>/gi, "");
+
+    console.log("After HTML to BBCode:", bb);
+
+    bb = bb.replace(/<\/?[^>]+(>|$)/g, "");
+    console.log("After removing HTML tags:", bb);
+    
+    bb = bb.replace(/[ \t]+/g, " ")  
+           .replace(/[ \t]*\n[ \t]*/g, "\n") 
+           .replace(/\n{3,}/g, "\n\n");
+    
+    console.log("After cleaning (keeping diacritics):", bb);
+
+    document.getElementById("outputText").value = bb.trim();
+}
+
+function removeDiacriticsOnly() {
+    let editor = document.getElementById("editor");
+    let text = editor.innerText.trim();
+    document.getElementById("outputText").value = removeVietnameseDiacritics(text);
+}
+
+function resetText() {
+    document.getElementById("editor").innerHTML = "";
+    document.getElementById("outputText").value = "";
+}
+</script>
+
+</body>
+</html>
