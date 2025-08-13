@@ -36,7 +36,6 @@ function removeVietnameseDiacritics(text) {
 function convertRichTextToBBCode() {
     let editor = document.getElementById("editor");
     let html = editor.innerHTML;
-    console.log("Original HTML:", html);
 
     let bb = html
         .replace(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/gi, "[b]$1[/b]\n\n")
@@ -54,17 +53,12 @@ function convertRichTextToBBCode() {
         .replace(/<\/span><\/span>/gi, "\n\n")
         .replace(/<\/span>/gi, "");
 
-    console.log("After HTML to BBCode:", bb);
-
     bb = bb.replace(/<\/?[^>]+(>|$)/g, "");
-    console.log("After removing HTML tags:", bb);
     
     bb = bb.replace(/[ \t]+/g, " ")  // Chỉ thay nhiều space/tab thành 1 space, không touch xuống dòng
            .replace(/[ \t]*\n[ \t]*/g, "\n")  // Loại bỏ space/tab xung quanh xuống dòng
            .replace(/\n{3,}/g, "\n\n");  // Giới hạn tối đa 2 xuống dòng liên tiếp
     
-    console.log("After cleaning:", bb);
-
     let result = "";
     let i = 0;
     while (i < bb.length) {
@@ -90,8 +84,6 @@ function convertRichTextToBBCode() {
 function convertRichTextToBBCodeKeepDiacritics() {
     let editor = document.getElementById("editor");
     let html = editor.innerHTML;
-    console.log("Original HTML:", html);
-
     let bb = html
         .replace(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/gi, "[b]$1[/b]\n\n")
         .replace(/<b>(.*?)<\/b>/gi, "[b]$1[/b]")
@@ -108,17 +100,13 @@ function convertRichTextToBBCodeKeepDiacritics() {
         .replace(/<\/span><\/span>/gi, "\n\n")
         .replace(/<\/span>/gi, "");
 
-    console.log("After HTML to BBCode:", bb);
 
     bb = bb.replace(/<\/?[^>]+(>|$)/g, "");
-    console.log("After removing HTML tags:", bb);
     
     bb = bb.replace(/[ \t]+/g, " ")  
            .replace(/[ \t]*\n[ \t]*/g, "\n") 
            .replace(/\n{3,}/g, "\n\n");
     
-    console.log("After cleaning (keeping diacritics):", bb);
-
     document.getElementById("outputText").value = bb.trim();
 }
 
