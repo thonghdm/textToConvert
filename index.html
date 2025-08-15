@@ -55,6 +55,14 @@ function convertRichTextToBBCode() {
 
     bb = bb.replace(/<\/?[^>]+(>|$)/g, "");
     
+    // Xóa các HTML entities
+    bb = bb.replace(/&nbsp;/g, " ")
+           .replace(/&amp;/g, "&")
+           .replace(/&lt;/g, "<")
+           .replace(/&gt;/g, ">")
+           .replace(/&quot;/g, '"')
+           .replace(/&#39;/g, "'");
+    
     bb = bb.replace(/[ \t]+/g, " ")  // Chỉ thay nhiều space/tab thành 1 space, không touch xuống dòng
            .replace(/[ \t]*\n[ \t]*/g, "\n")  // Loại bỏ space/tab xung quanh xuống dòng
            .replace(/\n{3,}/g, "\n\n");  // Giới hạn tối đa 2 xuống dòng liên tiếp
@@ -102,6 +110,14 @@ function convertRichTextToBBCodeKeepDiacritics() {
 
 
     bb = bb.replace(/<\/?[^>]+(>|$)/g, "");
+    
+    // Xóa các HTML entities
+    bb = bb.replace(/&nbsp;/g, " ")
+           .replace(/&amp;/g, "&")
+           .replace(/&lt;/g, "<")
+           .replace(/&gt;/g, ">")
+           .replace(/&quot;/g, '"')
+           .replace(/&#39;/g, "'");
     
     bb = bb.replace(/[ \t]+/g, " ")  
            .replace(/[ \t]*\n[ \t]*/g, "\n") 
