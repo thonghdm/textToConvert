@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Rich Text → BBCode</title>
+<title>Anh Ten Nau</title>
 <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f8f9fa; }
     #editor { width: 100%; height: 150px; border: 1px solid #ccc; padding: 8px; margin-bottom: 10px; overflow: auto; }
@@ -12,12 +12,13 @@
 </head>
 <body>
 
-<h2>Rich Text → BBCode → Xóa dấu</h2>
+<h2>Text Converter: BBCode ↔ HTML ↔ Plain Text</h2>
 
 <div id="editor" contenteditable="true" placeholder="Paste văn bản từ Word/Docs vào đây..."></div><br>
 
 <button onclick="convertRichTextToBBCode()">BBCode (Xóa dấu)</button>
 <button onclick="convertRichTextToBBCodeKeepDiacritics()">BBCode (Giữ dấu)</button>
+<button onclick="convertTextToHTML()">Text → HTML (Xóa dấu)</button>
 <!-- <button onclick="removeDiacriticsOnly()">Chỉ Xóa dấu</button> -->
 <button onclick="resetText()">Reset</button>
 
@@ -124,6 +125,99 @@ function convertRichTextToBBCodeKeepDiacritics() {
            .replace(/\n{3,}/g, "\n\n");
     
     document.getElementById("outputText").value = bb.trim();
+}
+
+function convertTextToHTML() {
+    let editor = document.getElementById("editor");
+    let html = editor.innerHTML;
+
+    let cleanHtml = html
+        .replace(/<span[^>]*>/gi, '')
+        .replace(/<\/span>/gi, '')
+        .replace(/<div[^>]*>/gi, '')
+        .replace(/<\/div>/gi, '');
+
+    cleanHtml = cleanHtml
+        .replace(/<a[^>]*href\s*=\s*["']([^"']+)["'][^>]*>(.*?)<\/a>/gi, '<a href="$1">$2</a>');
+
+    cleanHtml = cleanHtml.replace(/<h([1-6])[^>]*>(.*?)<\/h\1>/gis, function (_, level, content) {
+        let noP = content.replace(/<\/?p[^>]*>/gi, '');
+        return `<h${level}><strong>${noP}</strong></h${level}>`;
+    });
+
+    cleanHtml = cleanHtml.replace(/<p[^>]*>/gi, '<p>');
+
+    cleanHtml = cleanHtml.replace(/<br[^>]*>/gi, '<br />');
+
+    // Remove id and style attributes
+    cleanHtml = cleanHtml
+        .replace(/\s+id\s*=\s*["'][^"']*["']/gi, '')
+        .replace(/\s+style\s*=\s*["'][^"']*["']/gi, '');
+
+    cleanHtml = cleanHtml
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+
+    cleanHtml = cleanHtml.replace(/<(\w+)>\s*<\/\1>/gi, '');
+
+    let result = "";
+    let i = 0;
+    while (i < cleanHtml.length) {
+        if (cleanHtml[i] === '<') {
+            let tagEnd = cleanHtml.indexOf('>', i);
+            if (tagEnd !== -1) {
+                result += cleanHtml.substring(i, tagEnd + 1);
+                i = tagEnd + 1;
+            } else {
+                result += removeVietnameseDiacritics(cleanHtml[i]);
+                i++;
+            }
+        } else {
+            result += removeVietnameseDiacritics(cleanHtml[i]);
+            i++;
+        }
+    }
+
+    result = result
+        .replace(/\s+/g, ' ')
+        .replace(/>\s+</g, '><')
+        .replace(/<\/h[1-6]>/gi, '$&\n\n')
+        .replace(/<\/p>/gi, '$&\n\n')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .replace(/<(h[1-6]|p)>\s*(.*?)\s*<\/\1>/gi, '<$1>$2</$1>')
+        .trim();
+
+    result += '\n\n<p><br />\n </p>';
+
+    document.getElementById("outputText").value = result;
+}
+
+function removeVietnameseDiacritics(str) {
+    const accentsMap = [
+        { base: 'a', letters: /[àáạảãâầấậẩẫăằắặẳẵ]/g },
+        { base: 'A', letters: /[ÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴ]/g },
+        { base: 'e', letters: /[èéẹẻẽêềếệểễ]/g },
+        { base: 'E', letters: /[ÈÉẸẺẼÊỀẾỆỂỄ]/g },
+        { base: 'i', letters: /[ìíịỉĩ]/g },
+        { base: 'I', letters: /[ÌÍỊỈĨ]/g },
+        { base: 'o', letters: /[òóọỏõôồốộổỗơờớợởỡ]/g },
+        { base: 'O', letters: /[ÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠ]/g },
+        { base: 'u', letters: /[ùúụủũưừứựửữ]/g },
+        { base: 'U', letters: /[ÙÚỤỦŨƯỪỨỰỬỮ]/g },
+        { base: 'y', letters: /[ỳýỵỷỹ]/g },
+        { base: 'Y', letters: /[ỲÝỴỶỸ]/g },
+        { base: 'd', letters: /[đ]/g },
+        { base: 'D', letters: /[Đ]/g }
+    ];
+    accentsMap.forEach(accent => {
+        str = str.replace(accent.letters, accent.base);
+    });
+    return str;
 }
 
 function removeDiacriticsOnly() {
