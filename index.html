@@ -18,7 +18,8 @@
 
 <button onclick="convertRichTextToBBCode()">BBCode (Xóa dấu)</button>
 <button onclick="convertRichTextToBBCodeKeepDiacritics()">BBCode (Giữ dấu)</button>
-<button onclick="convertTextToHTML()">Text → HTML (Xóa dấu)</button>
+<button onclick="convertTextToHTML()">HTML (Xóa dấu)</button>
+<button onclick="convertTextToHTMLKeepDiacritics()">HTML (Giữ dấu)</button>
 <!-- <button onclick="removeDiacriticsOnly()">Chỉ Xóa dấu</button> -->
 <button onclick="resetText()">Reset</button>
 
@@ -183,6 +184,59 @@ function convertTextToHTML() {
     }
 
     result = result
+        .replace(/\s+/g, ' ')
+        .replace(/>\s+</g, '><')
+        .replace(/<\/h[1-6]>/gi, '$&\n\n')
+        .replace(/<\/p>/gi, '$&\n\n')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .replace(/<(h[1-6]|p)>\s*(.*?)\s*<\/\1>/gi, '<$1>$2</$1>')
+        .trim();
+
+    result += '\n\n<p><br />\n </p>';
+
+    document.getElementById("outputText").value = result;
+}
+
+function convertTextToHTMLKeepDiacritics() {
+    let editor = document.getElementById("editor");
+    let html = editor.innerHTML;
+
+    let cleanHtml = html
+        .replace(/<span[^>]*>/gi, '')
+        .replace(/<\/span>/gi, '')
+        .replace(/<div[^>]*>/gi, '')
+        .replace(/<\/div>/gi, '');
+
+    cleanHtml = cleanHtml
+        .replace(/<a[^>]*href\s*=\s*["']([^"']+)["'][^>]*>(.*?)<\/a>/gi, '<a href="$1">$2</a>');
+
+    cleanHtml = cleanHtml.replace(/<h([1-6])[^>]*>(.*?)<\/h\1>/gis, function (_, level, content) {
+        let noP = content.replace(/<\/?p[^>]*>/gi, '');
+        return `<h${level}><strong>${noP}</strong></h${level}>`;
+    });
+
+    cleanHtml = cleanHtml.replace(/<p[^>]*>/gi, '<p>');
+
+    cleanHtml = cleanHtml.replace(/<br[^>]*>/gi, '<br />');
+
+    // Remove id and style attributes
+    cleanHtml = cleanHtml
+        .replace(/\s+id\s*=\s*["'][^"']*["']/gi, '')
+        .replace(/\s+style\s*=\s*["'][^"']*["']/gi, '');
+
+    cleanHtml = cleanHtml
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+
+    cleanHtml = cleanHtml.replace(/<(\w+)>\s*<\/\1>/gi, '');
+
+    // Clean HTML without removing Vietnamese diacritics
+    let result = cleanHtml
         .replace(/\s+/g, ' ')
         .replace(/>\s+</g, '><')
         .replace(/<\/h[1-6]>/gi, '$&\n\n')
