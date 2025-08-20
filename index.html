@@ -27,6 +27,31 @@
 <textarea id="outputText" readonly></textarea>
 
 <script>
+// Hàm làm sạch HTML để tránh format lồng nhau và lỗi BBCode
+function cleanupHTML(html) {
+    // Loại bỏ các span, div không cần thiết
+    html = html.replace(/<span[^>]*>/gi, '').replace(/<\/span>/gi, '');
+    html = html.replace(/<div[^>]*>/gi, '').replace(/<\/div>/gi, '\n');
+    
+    // Loại bỏ các tag lồng nhau thừa
+    html = html.replace(/<(b|strong)([^>]*)><(b|strong)([^>]*)>/gi, '<$1$2>');
+    html = html.replace(/<\/(b|strong)><\/(b|strong)>/gi, '</$1>');
+    html = html.replace(/<(i|em)([^>]*)><(i|em)([^>]*)>/gi, '<$1$2>');
+    html = html.replace(/<\/(i|em)><\/(i|em)>/gi, '</$1>');
+    
+    // Loại bỏ các attribute không cần thiết
+    html = html.replace(/\s+(style|class|id|data-[^=]*)\s*=\s*["'][^"']*["']/gi, '');
+    
+    // Chuẩn hóa các tag
+    html = html.replace(/<p[^>]*>/gi, '<p>');
+    html = html.replace(/<br[^>]*>/gi, '<br>');
+    
+    // Loại bỏ whitespace thừa
+    html = html.replace(/>\s+</g, '><');
+    
+    return html;
+}
+
 function removeVietnameseDiacritics(text) {
     return text
         .normalize("NFD")
@@ -38,6 +63,9 @@ function removeVietnameseDiacritics(text) {
 function convertRichTextToBBCode() {
     let editor = document.getElementById("editor");
     let html = editor.innerHTML;
+
+    // Làm sạch HTML trước khi xử lý để tránh lỗi format lồng nhau
+    html = cleanupHTML(html);
 
     let bb = html
         .replace(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/gi, "[b]$1[/b]\n\n")
@@ -94,6 +122,10 @@ function convertRichTextToBBCode() {
 function convertRichTextToBBCodeKeepDiacritics() {
     let editor = document.getElementById("editor");
     let html = editor.innerHTML;
+    
+    // Làm sạch HTML trước khi xử lý để tránh lỗi format lồng nhau
+    html = cleanupHTML(html);
+    
     let bb = html
         .replace(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/gi, "[b]$1[/b]\n\n")
         .replace(/<b>(.*?)<\/b>/gi, "[b]$1[/b]")
@@ -109,7 +141,6 @@ function convertRichTextToBBCodeKeepDiacritics() {
         .replace(/<div[^>]*>/gi, "")
         .replace(/<\/span><\/span>/gi, "\n\n")
         .replace(/<\/span>/gi, "");
-
 
     bb = bb.replace(/<\/?[^>]+(>|$)/g, "");
     
@@ -131,6 +162,9 @@ function convertRichTextToBBCodeKeepDiacritics() {
 function convertTextToHTML() {
     let editor = document.getElementById("editor");
     let html = editor.innerHTML;
+
+    // Làm sạch HTML trước khi xử lý
+    html = cleanupHTML(html);
 
     let cleanHtml = html
         .replace(/<span[^>]*>/gi, '')
@@ -201,6 +235,9 @@ function convertTextToHTML() {
 function convertTextToHTMLKeepDiacritics() {
     let editor = document.getElementById("editor");
     let html = editor.innerHTML;
+
+    // Làm sạch HTML trước khi xử lý
+    html = cleanupHTML(html);
 
     let cleanHtml = html
         .replace(/<span[^>]*>/gi, '')
