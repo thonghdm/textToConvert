@@ -27,8 +27,20 @@
 <textarea id="outputText" readonly></textarea>
 
 <script>
+
+
+
 // Hàm làm sạch HTML để tránh format lồng nhau và lỗi BBCode
 function cleanupHTML(html) {
+    // Loại bỏ thẻ <b> bao quanh toàn bộ nội dung (thường do paste lỗi)
+    if (html.startsWith('<b>') && html.endsWith('</b>')) {
+        html = html.slice(3, -4); // Loại bỏ <b> đầu và </b> cuối
+    }
+    
+    // Loại bỏ thẻ <b> rỗng hoặc chỉ chứa khoảng trắng
+    html = html.replace(/<b>\s*<\/b>/gi, '');
+    html = html.replace(/<b><\/b>/gi, '');
+    
     // Loại bỏ các span, div không cần thiết
     html = html.replace(/<span[^>]*>/gi, '').replace(/<\/span>/gi, '');
     html = html.replace(/<div[^>]*>/gi, '').replace(/<\/div>/gi, '\n');
@@ -48,6 +60,15 @@ function cleanupHTML(html) {
     
     // Loại bỏ whitespace thừa
     html = html.replace(/>\s+</g, '><');
+    
+    // Xử lý trường hợp đặc biệt: <b> bao quanh toàn bộ nội dung ở cuối
+    html = html.replace(/^<b>([\s\S]*)<\/b>$/gi, '$1');
+    
+    // Loại bỏ các thẻ <b> thừa khác
+    html = html.replace(/<b>\s*(<h[1-6])/gi, '$1'); // <b><h1> -> <h1>
+    html = html.replace(/(<\/h[1-6]>)\s*<\/b>/gi, '$1'); // </h1></b> -> </h1>
+    html = html.replace(/<b>\s*(<p>)/gi, '$1'); // <b><p> -> <p>
+    html = html.replace(/(<\/p>)\s*<\/b>/gi, '$1'); // </p></b> -> </p>
     
     return html;
 }
@@ -176,7 +197,16 @@ function convertTextToHTML() {
         .replace(/<a[^>]*href\s*=\s*["']([^"']+)["'][^>]*>(.*?)<\/a>/gi, '<a href="$1">$2</a>');
 
     cleanHtml = cleanHtml.replace(/<h([1-6])[^>]*>(.*?)<\/h\1>/gis, function (_, level, content) {
+        // Loại bỏ tất cả formatting bên trong heading để tránh conflict
         let noP = content.replace(/<\/?p[^>]*>/gi, '');
+        // Loại bỏ bold/strong tags để tránh nested formatting
+        noP = noP.replace(/<\/?(?:b|strong)[^>]*>/gi, '');
+        // Loại bỏ italic tags
+        noP = noP.replace(/<\/?(?:i|em)[^>]*>/gi, '');
+        // Loại bỏ underline tags
+        noP = noP.replace(/<\/?u[^>]*>/gi, '');
+        // Lấy text thuần, loại bỏ mọi tag còn lại
+        noP = noP.replace(/<[^>]*>/g, '');
         return `<h${level}><strong>${noP}</strong></h${level}>`;
     });
 
